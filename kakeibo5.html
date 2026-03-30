@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>💛 家計簿</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap');
+  :root {
+    --white: #FFFFFF;
+    --brown: #633E2B;
+    --yellow: #FEE474;
+    --yellow-soft: #FFF3B0;
+    --yellow-mid: #fff8dc;
+    --brown-light: #9a6b50;
+    --brown-xlight: #f5ece5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; overflow-x: hidden; }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    background: var(--white);
+    font-family: 'Zen Maru Gothic', 'Hiragino Kaku Gothic ProN', sans-serif;
+    color: var(--brown);
+    padding-bottom: 100px;
+  }
+  .wrap {
+    max-width: 430px; margin: 0 auto;
+    padding: 0 14px;
+    position: relative; z-index: 1;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(circle, #FEE47428 1px, transparent 1px);
+    background-size: 26px 26px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Header */
+  .header {
+    padding: 48px 14px 24px;
+    text-align: center; position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute; top: 0; left: -14px; right: -14px; height: 100%;
+    background: linear-gradient(170deg, var(--yellow) 0%, var(--yellow-soft) 65%, var(--white) 100%);
+    border-radius: 0 0 36px 36px; z-index: 0;
+  }
+  .header-inner { position: relative; z-index: 1; }
+  .header .sub {
+    font-size: 10px; letter-spacing: 3px; color: var(--brown);
+    margin-bottom: 4px; text-transform: uppercase; font-weight: 700; opacity: 0.6;
+  }
+  .header h1 { font-size: 26px; font-weight: 900; color: var(--brown); }
+
+  .month-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin-top: 14px;
+  }
+  .month-nav button {
+    background: rgba(99,62,43,0.1); border: none; border-radius: 10px;
+    color: var(--brown); font-size: 22px; width: 40px; height: 40px;
+    cursor: pointer; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-appearance: none;
+  }
+  .month-nav span {
+    font-size: 16px; font-weight: 700;
+    min-width: 120px; text-align: center; color: var(--brown);
+  }
+
+  /* Summary */
+  .summary {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; padding: 20px 0 18px;
+  }
+  .card {
+    background: var(--yellow); border-radius: 16px;
+    padding: 12px 6px; text-align: center;
+    box-shadow: 0 3px 12px rgba(99,62,43,0.10);
+    border: 2px solid rgba(99,62,43,0.07);
+  }
+  .card .icon { font-size: 18px; margin-bottom: 3px; }
+  .card .clabel { font-size: 9px; color: var(--brown); margin-bottom: 3px; font-weight: 700; opacity: 0.65; }
+  .card .cval { font-size: 11px; font-weight: 900; line-height: 1.2; color: var(--brown); word-break: break-all; }
+  .card .csub { font-size: 9px; color: var(--brown); margin-top: 2px; font-weight: 700; opacity: 0.65; }
+  .card.income-card { background: var(--white); border: 2px solid var(--yellow); }
+  .card.balance-card { background: var(--yellow); }
+  .card.balance-card.minus { background: var(--brown-xlight); border-color: var(--brown-light); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tabs button {
+    flex: 1; padding: 12px 4px; border-radius: 14px;
+    border: 2px solid transparent; cursor: pointer;
+    font-size: 12px; font-weight: 700; color: var(--brown-light);
+    background: var(--white); transition: all .2s;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    box-shadow: 0 2px 8px rgba(99,62,43,0.07);
+    white-space: nowrap;
+    -webkit-appearance: none;
+    touch-action: manipulation;
+  }
+  .tabs button.active {
+    background: var(--yellow); color: var(--brown);
+    border-color: var(--yellow);
+    box-shadow: 0 4px 14px rgba(254,228,116,0.45);
+  }
+
+  /* List */
+  .record-item {
+    background: var(--white); border-radius: 14px; padding: 11px 12px;
+    display: flex; align-items: center; gap: 10px;
+    border: 2px solid var(--yellow); margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(99,62,43,0.06);
+  }
+  .rec-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .rec-info { flex: 1; min-width: 0; }
+  .rec-info .rec-sub { font-size: 10px; color: var(--brown-light); margin-bottom: 2px; font-weight: 500; }
+  .rec-info .rec-memo { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--brown); font-weight: 700; }
+  .rec-amount { font-weight: 900; font-size: 14px; flex-shrink: 0; color: var(--brown); }
+  .del-btn {
+    background: rgba(99,62,43,0.07); border: 1.5px solid rgba(99,62,43,0.18);
+    border-radius: 8px; color: var(--brown); font-size: 12px;
+    padding: 5px 9px; cursor: pointer; flex-shrink: 0; font-weight: 700;
+    touch-action: manipulation;
+  }
+  .empty {
+    text-align: center; padding: 60px 0;
+    color: var(--brown-light); font-size: 14px; line-height: 2.2; font-weight: 700;
+  }
+
+  /* Form */
+  .form-box {
+    background: var(--white); border-radius: 20px; padding: 20px 16px;
+    border: 2px solid var(--yellow);
+    box-shadow: 0 4px 18px rgba(99,62,43,0.07);
+  }
+  .type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+  .type-btns button {
+    flex: 1; padding: 13px; border-radius: 14px;
+    border: 2px solid var(--yellow); cursor: pointer;
+    font-weight: 700; font-size: 14px; color: var(--brown-light);
+    background: var(--white); transition: all .2s;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    -webkit-appearance: none; touch-action: manipulation;
+  }
+  .type-btns button.active-expense {
+    background: var(--yellow); color: var(--brown);
+    border-color: var(--yellow); box-shadow: 0 4px 12px rgba(254,228,116,0.45);
+  }
+  .type-btns button.active-income {
+    background: var(--yellow-soft); color: var(--brown);
+    border-color: var(--yellow); box-shadow: 0 4px 12px rgba(254,228,116,0.3);
+  }
+  .flabel { display: block; font-size: 12px; color: var(--brown); margin-bottom: 6px; font-weight: 700; opacity: 0.7; }
+  .finput {
+    width: 100%; margin-bottom: 14px;
+    background: var(--white); border: 2px solid var(--yellow);
+    border-radius: 12px; padding: 13px 14px; color: var(--brown);
+    font-size: 16px; outline: none;
+    font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700;
+    -webkit-appearance: none;
+  }
+  .finput:focus { border-color: var(--brown); }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
+  .cat-btn {
+    padding: 11px 10px; border-radius: 12px;
+    border: 2px solid var(--yellow); background: var(--white);
+    color: var(--brown-light); cursor: pointer; font-size: 12px;
+    font-weight: 700; text-align: left; transition: all .15s;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    touch-action: manipulation; -webkit-appearance: none;
+  }
+  .add-btn {
+    width: 100%; padding: 16px; border-radius: 16px; border: none; cursor: pointer;
+    background: var(--yellow); color: var(--brown);
+    font-size: 16px; font-weight: 900; margin-top: 4px;
+    box-shadow: 0 6px 20px rgba(254,228,116,0.5);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    -webkit-appearance: none; touch-action: manipulation;
+  }
+  .add-btn:active { opacity: 0.85; }
+
+  /* Chart */
+  .chart-box {
+    background: var(--white); border-radius: 20px; padding: 20px 16px;
+    border: 2px solid var(--yellow);
+    box-shadow: 0 4px 18px rgba(99,62,43,0.07);
+  }
+  .chart-title { font-size: 14px; font-weight: 900; margin-bottom: 16px; color: var(--brown); }
+  .bar-row { margin-bottom: 14px; }
+  .bar-head { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: var(--brown); font-weight: 700; }
+  .bar-track { height: 12px; border-radius: 99px; background: var(--yellow-soft); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s cubic-bezier(.4,0,.2,1); background: var(--yellow); }
+  .bar-pct { font-size: 10px; color: var(--brown-light); margin-top: 3px; font-weight: 500; }
+
+  /* Modal */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(99,62,43,0.45); align-items: center; justify-content: center;
+    z-index: 100; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 22px; padding: 28px 20px;
+    width: 100%; max-width: 300px; text-align: center;
+    border: 2px solid var(--yellow);
+    box-shadow: 0 20px 60px rgba(99,62,43,0.2);
+  }
+  .modal-icon { font-size: 32px; margin-bottom: 10px; }
+  .modal-title { font-weight: 900; font-size: 16px; margin-bottom: 8px; color: var(--brown); }
+  .modal-sub { color: var(--brown-light); font-size: 13px; margin-bottom: 22px; font-weight: 500; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button {
+    flex: 1; padding: 13px; border-radius: 14px;
+    font-weight: 700; cursor: pointer; font-size: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    touch-action: manipulation; -webkit-appearance: none;
+  }
+  .modal-cancel { border: 2px solid var(--yellow); background: var(--white); color: var(--brown); }
+  .modal-delete { border: none; background: var(--yellow); color: var(--brown); font-weight: 900; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="header-inner">
+      <div class="sub">My Kakeibo</div>
+      <h1>🌼 家計簿</h1>
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span id="monthLabel"></span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="card income-card">
+      <div class="icon">🌿</div>
+      <div class="clabel">収入</div>
+      <div class="cval" id="sumIncome">¥0</div>
+    </div>
+    <div class="card">
+      <div class="icon">💸</div>
+      <div class="clabel">支出</div>
+      <div class="cval" id="sumExpense">¥0</div>
+    </div>
+    <div class="card balance-card" id="balanceCard">
+      <div class="icon" id="balanceIcon">🎉</div>
+      <div class="clabel">収支</div>
+      <div class="cval" id="sumBalance">¥0</div>
+      <div class="csub" id="balanceSub">黒字✨</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button id="tab-list" class="active" onclick="switchTab('list')">📋 明細</button>
+    <button id="tab-add" onclick="switchTab('add')">➕ 追加</button>
+    <button id="tab-chart" onclick="switchTab('chart')">📊 グラフ</button>
+  </div>
+
+  <div id="pane-list"><div id="recordList"></div></div>
+
+  <div id="pane-add" style="display:none">
+    <div class="form-box">
+      <div class="type-btns">
+        <button id="btn-expense" class="active-expense" onclick="setType('expense')">💸 支出</button>
+        <button id="btn-income" onclick="setType('income')">🌿 収入</button>
+      </div>
+      <label class="flabel">金額 (円)</label>
+      <input class="finput" type="number" id="fAmount" placeholder="0" inputmode="numeric">
+      <div id="catSection">
+        <label class="flabel">カテゴリ</label>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+      <label class="flabel">日付</label>
+      <input class="finput" type="date" id="fDate">
+      <label class="flabel">メモ（任意）</label>
+      <input class="finput" type="text" id="fMemo" placeholder="なんのお金？">
+      <button class="add-btn" onclick="addRecord()">✨ 追加する</button>
+    </div>
+  </div>
+
+  <div id="pane-chart" style="display:none">
+    <div class="chart-box">
+      <div class="chart-title">🌼 カテゴリ別支出</div>
+      <div id="chartContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title">この記録を削除する？</div>
+    <div class="modal-sub">この操作は元に戻せないよ！</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="modal-delete" onclick="confirmDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATS = [
+  { id:"food",          label:"🍜 食費" },
+  { id:"transport",     label:"🚃 交通費" },
+  { id:"entertainment", label:"🎮 娯楽" },
+  { id:"fashion",       label:"👗 ファッション" },
+  { id:"beauty",        label:"💄 美容" },
+  { id:"health",        label:"💊 医療・健康" },
+  { id:"utility",       label:"🏠 光熱費" },
+  { id:"other",         label:"📦 その他" },
+];
+
+let records = [];
+try { records = JSON.parse(localStorage.getItem("kakeiboSP") || "[]"); } catch {}
+
+const now = new Date();
+let curYear = now.getFullYear();
+let curMonth = now.getMonth();
+let curType = "expense";
+let curCat = "food";
+let deleteTargetId = null;
+
+document.getElementById("fDate").value = now.toISOString().slice(0,10);
+buildCatGrid(); render();
+
+function save() { try { localStorage.setItem("kakeiboSP", JSON.stringify(records)); } catch {} }
+function yen(n) { return "¥" + Number(n).toLocaleString(); }
+function monthRecords() {
+  return records.filter(r => {
+    const d = new Date(r.date);
+    return d.getMonth()===curMonth && d.getFullYear()===curYear;
+  });
+}
+
+function render() {
+  const MONTHS = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+  document.getElementById("monthLabel").textContent = curYear + "年 " + MONTHS[curMonth];
+  const mr = monthRecords();
+  const income = mr.filter(r=>r.type==="income").reduce((s,r)=>s+r.amount,0);
+  const expense = mr.filter(r=>r.type==="expense").reduce((s,r)=>s+r.amount,0);
+  const balance = income - expense;
+  document.getElementById("sumIncome").textContent = yen(income);
+  document.getElementById("sumExpense").textContent = yen(expense);
+  document.getElementById("sumBalance").textContent = yen(Math.abs(balance));
+  document.getElementById("balanceIcon").textContent = balance >= 0 ? "🎉" : "😢";
+  document.getElementById("balanceSub").textContent = balance >= 0 ? "黒字✨" : "赤字💦";
+  document.getElementById("balanceCard").className = "card balance-card" + (balance < 0 ? " minus" : "");
+
+  const sorted = [...mr].sort((a,b) => new Date(b.date)-new Date(a.date));
+  const listEl = document.getElementById("recordList");
+  if (sorted.length === 0) {
+    listEl.innerHTML = '<div class="empty">まだ記録がないよ〜！<br/>➕ で追加してみよ🌼</div>';
+  } else {
+    listEl.innerHTML = sorted.map(r => {
+      const cat = CATS.find(c=>c.id===r.category);
+      const icon = r.type==="income" ? "🌿" : (cat?.label.split(" ")[0] || "💸");
+      const bg = r.type==="income" ? "#FFF3B0" : "#FEE474";
+      const sign = r.type==="income" ? "+" : "-";
+      const catLabel = r.type==="income" ? "🌿 収入" : (cat?.label || r.category);
+      return `<div class="record-item">
+        <div class="rec-icon" style="background:${bg}">${icon}</div>
+        <div class="rec-info">
+          <div class="rec-sub">${r.date}　${catLabel}</div>
+          ${r.memo ? `<div class="rec-memo">${r.memo}</div>` : ""}
+        </div>
+        <div class="rec-amount">${sign}${yen(r.amount)}</div>
+        <button class="del-btn" onclick="askDelete(${r.id})">✕</button>
+      </div>`;
+    }).join("");
+  }
+
+  const catTotals = CATS.map(c => ({
+    ...c,
+    total: mr.filter(r=>r.category===c.id&&r.type==="expense").reduce((s,r)=>s+r.amount,0)
+  })).filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+
+  const chartEl = document.getElementById("chartContent");
+  if (catTotals.length === 0) {
+    chartEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#9a6b50;font-size:13px;font-weight:700">今月の支出データがないよ〜！🌼</div>';
+  } else {
+    const max = catTotals[0].total;
+    chartEl.innerHTML = catTotals.map(c => `
+      <div class="bar-row">
+        <div class="bar-head"><span>${c.label}</span><span>${yen(c.total)}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(c.total/max)*100}%"></div></div>
+        <div class="bar-pct">支出全体の ${expense>0?Math.round((c.total/expense)*100):0}%</div>
+      </div>`).join("");
+  }
+}
+
+function changeMonth(d) {
+  curMonth += d;
+  if (curMonth < 0) { curMonth = 11; curYear--; }
+  if (curMonth > 11) { curMonth = 0; curYear++; }
+  render();
+}
+function switchTab(t) {
+  ["list","add","chart"].forEach(n => {
+    document.getElementById("pane-"+n).style.display = n===t ? "block" : "none";
+    document.getElementById("tab-"+n).classList.toggle("active", n===t);
+  });
+}
+function setType(t) {
+  curType = t;
+  document.getElementById("btn-expense").className = t==="expense" ? "active-expense" : "";
+  document.getElementById("btn-income").className = t==="income" ? "active-income" : "";
+  document.getElementById("catSection").style.display = t==="expense" ? "block" : "none";
+}
+function buildCatGrid() {
+  document.getElementById("catGrid").innerHTML = CATS.map(c =>
+    `<button class="cat-btn" id="cat-${c.id}" onclick="setCat('${c.id}')">${c.label}</button>`
+  ).join("");
+  setCat("food");
+}
+function setCat(id) {
+  curCat = id;
+  CATS.forEach(c => {
+    const btn = document.getElementById("cat-"+c.id);
+    if (!btn) return;
+    if (c.id === id) {
+      btn.style.border = "2px solid #633E2B";
+      btn.style.background = "#FEE474";
+      btn.style.color = "#633E2B";
+    } else {
+      btn.style.border = "2px solid #FEE474";
+      btn.style.background = "#FFFFFF";
+      btn.style.color = "#9a6b50";
+    }
+  });
+}
+function addRecord() {
+  const amt = Number(document.getElementById("fAmount").value);
+  if (!amt || amt <= 0) { alert("金額を入力してね！"); return; }
+  records.unshift({
+    id: Date.now(), amount: amt, category: curCat,
+    memo: document.getElementById("fMemo").value,
+    date: document.getElementById("fDate").value,
+    type: curType
+  });
+  save();
+  document.getElementById("fAmount").value = "";
+  document.getElementById("fMemo").value = "";
+  switchTab("list"); render();
+}
+function askDelete(id) { deleteTargetId=id; document.getElementById("modal").classList.add("show"); }
+function closeModal() { deleteTargetId=null; document.getElementById("modal").classList.remove("show"); }
+function confirmDelete() { records=records.filter(r=>r.id!==deleteTargetId); save(); closeModal(); render(); }
+</script>
+</body>
+</html>
